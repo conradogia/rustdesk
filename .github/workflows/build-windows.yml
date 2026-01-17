@@ -1,0 +1,40 @@
+name: Build RustDesk Windows Installer
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install dependencies
+      run: |
+        choco install llvm nasm strawberryperl -y
+
+    - name: Build RustDesk
+      run: |
+        cargo build --release
+
+    - name: Build Windows Installer
+      run: |
+        cd flutter
+        flutter pub get
+        flutter build windows --release
+
+    - name: Upload installer
+      uses: actions/upload-artifact@v4
+      with:
+        name: rustdesk-windows
+        path: |
+          target/release/*.exe
